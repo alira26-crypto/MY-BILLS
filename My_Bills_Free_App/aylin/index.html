@@ -402,6 +402,43 @@ async function sendRem(no){const d=BILLS[no];if(!d)return;const p=waPhone(d.cp);
  await pop(`<p style="font-family:PopB;font-size:17px;margin-bottom:6px">🔔 Payment reminder – ${_esc(d.no)}</p><p style="font-size:13.5px;color:#555;margin-bottom:10px">${_esc(d.cn||'')} · balance Rs ${fmt(N(d.bal))}. The message is ready — just press Send in WhatsApp.</p>
  <a class="popbtn wa" id="wago" href="https://wa.me/${p}?text=${encodeURIComponent(msg)}" target="_blank" rel="noopener">💬 Open WhatsApp – ${_esc(d.cp)}</a>`,[['Close',0]],{wide:1,onOpen:m=>{m.querySelector('#wago').addEventListener('click',()=>did=true)}});
  if(did){d.lr=Date.now();d.u=Date.now();if($('no').value===no)CURLR=d.lr;commit();GS.mark(no);renderReg()}}
+function paidMsg(d,link){const nm=(d.cn||'').trim(),L='━━━━━━━━━━━━━━━━━━';return `*AYLIN LIGHTS AND POWER SUPPLY*
+_Light Up Your Home with Style_
+${L}
+
+Assalam o Alaikum${nm?' *'+nm+'*':''},
+
+*Thank you!* We have received your payment for bill *${d.no}*.
+• Amount: *Rs ${fmt(N(d.tot))}*
+• Status: *PAID IN FULL*
+
+*Your paid bill:*
+${link}
+> This link is valid for 30 minutes. Tap *Save Picture* or *Save PDF* to keep it.
+
+We truly appreciate your trust in Aylin Lights. May your new lights bring brightness and joy to your home!
+
+For service, warranty or new arrivals, we are always here:
+Call / WhatsApp: +92 312 4828573
+
+*Follow us*
+• Instagram: https://instagram.com/aylinlight_
+• Facebook: https://facebook.com/share/1Q8bsMoYxR
+• WhatsApp Channel: https://whatsapp.com/channel/0029Vb9ZcS5KGGGIejdqi905
+
+${L}
+*AYLIN LIGHTS AND POWER SUPPLY*
+_Light Up Your Home with Style_`}
+async function thankPop(no){const d=BILLS[no];if(!d)return;const p=waPhone(d.cp),em=(d.em||'').trim();if(!p&&!em)return;
+ const link=APPURL+'#v='+await packBill(d),msg=paidMsg(d,link),sub=`Thank you – payment received for Aylin Lights bill ${d.no}`;
+ const body=msg.replace(/\*/g,'').replace(/^> /gm,'').replace(/^_([^_\n]+)_$/gm,'$1');let did=false;
+ await pop(`<p style="font-family:PopB;font-size:17px;margin-bottom:6px">🎉 ${_esc(d.no)} is PAID</p><p style="font-size:13.5px;color:#555;margin-bottom:10px">Send a thank-you message to <b>${_esc(d.cn||'the customer')}</b>? It is ready — just press Send.</p>
+ ${p?`<a class="popbtn wa" id="tyw" href="https://wa.me/${p}?text=${encodeURIComponent(msg)}" target="_blank" rel="noopener">💬 Send thank-you on WhatsApp – ${_esc(d.cp)}</a>`:''}
+ ${em?`<a class="popbtn" id="tye" href="https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(em)}&su=${encodeURIComponent(sub)}&body=${encodeURIComponent(body)}" target="_blank" rel="noopener" style="margin-top:8px;display:block;text-align:center">📧 Send thank-you by Gmail – ${_esc(em)}</a>`:''}`,
+ [['Not now',0]],{wide:1,onOpen:m=>{m.querySelectorAll('#tyw,#tye').forEach(a=>a.addEventListener('click',()=>did=true))}});
+ if(did){d.ty=Date.now();d.u=Date.now();commit();GS.mark(no)}}
+document.addEventListener('change',e=>{if(!e.target||e.target.id!=='stat'||VIEW)return;const no=$('no').value,old=BILLS[no];
+ if(e.target.value==='PAID'&&old&&old.stat&&old.stat!=='PAID'){setTimeout(()=>{DIRTY=true;saveNow(true);thankPop(no)},350)}},true);
 function remOff(no){const d=BILLS[no];if(!d)return;d.rem=false;d.u=Date.now();if($('no').value===no){REMON=false;updRem()}commit();GS.mark(no);renderReg();toast('🔕 Reminder OFF for '+no)}
 function renderRem(){const el=$('remlist');if(!el)return;const L=Object.values(BILLS).filter(d=>d.stat!=='PAID'&&N(d.bal)>0&&d.rem!==false).sort((a,b)=>(a.no>b.no?1:-1));
  if(!L.length){el.innerHTML='';return}const due=L.filter(remDue);
