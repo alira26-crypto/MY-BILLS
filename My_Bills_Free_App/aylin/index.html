@@ -57,7 +57,7 @@ body.viewmode select{appearance:none;-webkit-appearance:none}
 <button class="p" onclick="printPic()">🖨 Print / Save PDF</button>
 <button onclick="addItem()">＋ Add Item</button>
 <button onclick="newBill()">🧾 New Bill</button>
-<button class="p" onclick="sendLink()" style="background:#25d366;border-color:#1da851;color:#fff">💬 Send Bill on WhatsApp (link)</button><button onclick="waImg()">🖼 Send Bill Picture</button><button onclick="saveImg()">🖼 Save as Picture</button><button onclick="wa()">✉ Send as Text</button>
+<button class="p" onclick="sendLink()" style="background:#25d366;border-color:#1da851;color:#fff">💬 Send Bill on WhatsApp (link)</button><button onclick="sendMail()" style="background:#fff;border-color:#d93025;color:#d93025">📧 Send Bill by Gmail</button><button onclick="waImg()">🖼 Send Bill Picture</button><button onclick="saveImg()">🖼 Save as Picture</button><button onclick="wa()">✉ Send as Text</button>
 <button class="p" onclick="saveNext()">💾 Save &amp; Next Bill</button>
 <button onclick="document.getElementById('reg').scrollIntoView({behavior:'smooth'})">📒 All Bills / 🔎 Filter</button>
 <button onclick="openSig()">✍ Signature</button><button onclick="toggleStamp()">⚫/🔵 Stamp Colour</button>
@@ -367,7 +367,7 @@ function saveNext(){if(!billUsed()){toast('This bill is empty – add a customer
 function afterSent(){if(!billUsed())return;const old=$('no').value;saveNow(true);newBill();toast('✔ Bill '+old+' saved  ·  New bill '+$('no').value+' ready');scrollTo({top:0,behavior:'smooth'})}
 async function saveImg(){if(await fileOut(await billBlob(),fname()))afterSent()}
 /* ---------- bill link (customer can open, save picture or PDF) ---------- */
-const APPURL='https://alira26-crypto.github.io/MY-BILLS/My_Bills_Free_App/aylin/';
+const APPURL='https://alira26-crypto.github.io/aylinlights-ClientBillsDetail/';
 const b64u=u8=>{let s='';for(let i=0;i<u8.length;i+=8192)s+=String.fromCharCode.apply(null,u8.subarray(i,i+8192));return btoa(s).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'')};
 const ub64=t=>{t=t.replace(/-/g,'+').replace(/_/g,'/');while(t.length%4)t+='=';const s=atob(t),u=new Uint8Array(s.length);for(let i=0;i<s.length;i++)u[i]=s.charCodeAt(i);return u};
 async function packBill(d){const o={};['no','dt','cn','cp','ca','pm','stat','dis','del','adv','rm','tot','bal'].forEach(k=>{if(d[k]!==''&&d[k]!=null&&d[k]!==0&&d[k]!=='0')o[k]=d[k]});
@@ -390,9 +390,13 @@ Tap the link to view your bill anytime — you can save it as a picture or PDF.
 May your new lights brighten your home! ✨
 For any help or after-sales service, just reply here or call +92 312 4828573.
 
-📍 Alkhalil Center, 16 Hall Road, Lahore
-— Aylin Lights and Power Supply
-_Lighting Your Home, Charging Your Life_`}
+Follow us for new arrivals:
+📸 Instagram: https://instagram.com/aylinlight_
+👍 Facebook: https://facebook.com/share/1Q8bsMoYxR
+📢 WhatsApp Channel: https://whatsapp.com/channel/0029Vb9ZcS5KGGGIejdqi905
+
+*AYLIN LIGHTS AND POWER SUPPLY*
+*✨ Light Up Your Home with Style ✨*`}
 function vcard(d){const nm=(d.cn||'Customer').trim(),p=waPhone(d.cp);return `BEGIN:VCARD\nVERSION:3.0\nFN:${nm} (Aylin Customer)\nN:;${nm} (Aylin Customer);;;\nTEL;TYPE=CELL:+${p}\nNOTE:Aylin Lights customer – bill ${d.no}\nEND:VCARD\n`}
 async function sendLink(){if(!billUsed()){toast('This bill is empty – add a customer or an item first');return}
  saveNow(true);const d=cur(),link=APPURL+'#v='+await packBill(d),msg=thanksMsg(d,link),p=waPhone(d.cp);let did=false;
@@ -404,9 +408,20 @@ async function sendLink(){if(!billUsed()){toast('This bill is empty – add a cu
  <textarea readonly class="poptxt" style="height:150px">${_esc(msg)}</textarea>`,
  [['Close',0],['📋 Copy message',1,'p']],{wide:1,onOpen:m=>{const a=m.querySelector('#wago');if(a)a.addEventListener('click',()=>did=true)},onBtn:async v=>{if(v===1){try{await navigator.clipboard.writeText(msg);did=true;note('Copied ✔ Paste it in WhatsApp.')}catch(e){note('Could not copy here — press and hold the text to copy it.')}return true}return false}});
  if(did)afterSent()}
+function mailMsg(d,link){return thanksMsg(d,link).replace(/\*/g,'').replace(/_([^_\n]+)_/g,'$1')}
+async function sendMail(){if(!billUsed()){toast('This bill is empty – add a customer or an item first');return}
+ saveNow(true);const d=cur(),link=APPURL+'#v='+await packBill(d);let EM={};try{EM=JSON.parse(G('aylin_emails')||'{}')||{}}catch(e){}
+ const key=waPhone(d.cp)||(d.cn||'').trim().toLowerCase(),pre=EM[key]||'',sub=`Your Aylin Lights bill ${d.no} – Rs ${fmt(N(d.tot))}`;let did=false;
+ const v=await pop(`<p style="font-family:PopB;font-size:17px;margin-bottom:6px">📧 Send bill ${_esc(d.no)} by email</p>
+ <label style="display:block;margin:6px 0 4px">Customer’s email</label><input id="emto" type="email" inputmode="email" autocapitalize="off" value="${_esc(pre)}" placeholder="customer@gmail.com" style="width:100%;padding:10px;border:1.5px solid #d8c7a5;border-radius:8px;font:inherit">
+ <p style="font-size:12.5px;color:#777;margin:8px 0">The email has the same thank-you message and the bill link. The customer can open the bill and save it as a picture or PDF.</p>`,
+ [['Cancel',0],['✉ Other email app',2],['📧 Open in Gmail',1,'p']],{wide:1,onBtn:(v,m)=>{if(!v)return false;const to=m.querySelector('#emto').value.trim();if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(to)){m.querySelector('#emto').style.borderColor='#c0392b';m.querySelector('#emto').focus();return true}window._emto=to;return false}});
+ if(!v||!window._emto)return;const to=window._emto;window._emto=null;EM[key]=to;S('aylin_emails',JSON.stringify(EM));
+ const body=mailMsg(d,link),url=v===1?`https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(to)}&su=${encodeURIComponent(sub)}&body=${encodeURIComponent(body)}`:`mailto:${encodeURIComponent(to)}?subject=${encodeURIComponent(sub)}&body=${encodeURIComponent(body)}`;
+ if(await linkOut(url,v===1?'📧 Open Gmail – '+_esc(to):'✉ Open email app – '+_esc(to),''))afterSent()}
 async function startView(){let d=null;try{d=await unpackBill(location.hash.slice(3))}catch(e){}
  document.body.classList.add('viewmode');
- if(!d){document.body.innerHTML='<div style="font-family:sans-serif;padding:40px;text-align:center">This bill link is incomplete. Please ask Aylin Lights to send it again.<br><br><a href="https://wa.me/923124828573">WhatsApp +92 312 4828573</a></div>';return}
+ if(!d){const has=/^#v=./.test(location.hash);document.body.innerHTML=`<div style="font-family:PopM,sans-serif;min-height:100vh;background:#151515;color:#f3e6c8;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:30px;gap:14px"><div style="font-family:Cal,serif;font-size:38px;color:#f3c66d">Aylin Lights</div><div style="letter-spacing:4px;font-size:12px">AND POWER SUPPLY</div><div style="font-size:15px;max-width:420px;margin-top:10px">${has?'This bill link is incomplete. Please ask us to send it again.':'Bills from Aylin Lights open here from the link we send you on WhatsApp.'}</div><div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-top:8px"><a style="background:#25d366;color:#fff;padding:10px 16px;border-radius:8px;text-decoration:none" href="https://wa.me/923124828573">💬 WhatsApp</a><a style="background:#f3c66d;color:#151515;padding:10px 16px;border-radius:8px;text-decoration:none" href="https://instagram.com/aylinlight_">📸 Instagram</a><a style="background:#f3c66d;color:#151515;padding:10px 16px;border-radius:8px;text-decoration:none" href="https://facebook.com/share/1Q8bsMoYxR">👍 Facebook</a></div></div>`;return}
  load(Object.assign({csig:''},d));[...$('rows').children].forEach(tr=>{if(!tr.querySelector('.d').value&&!N(tr.querySelector('.rt').value))tr.remove()});calc();
  document.querySelectorAll('#pg input,#pg select,#pg textarea').forEach(e=>{e.readOnly=true;if(e.tagName==='SELECT')e.disabled=true;e.tabIndex=-1});
  document.title='Aylin Lights – Bill '+d.no;
