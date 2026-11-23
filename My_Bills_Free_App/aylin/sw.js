@@ -1,4 +1,4 @@
-const C='aylin-v17';const FILES=['./','./index.html','./manifest.webmanifest','./icon-180.png','./icon-192.png','./icon-512.png'];
+const C='aylin-v18';const FILES=['./','./index.html','./manifest.webmanifest','./icon-180.png','./icon-192.png','./icon-512.png'];
 self.addEventListener('install',e=>{e.waitUntil(caches.open(C).then(c=>c.addAll(FILES)));self.skipWaiting()});
 self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(k=>Promise.all(k.filter(x=>x.startsWith('aylin-')&&x!==C).map(x=>caches.delete(x)))).then(()=>self.clients.claim()))});
 // pages: newest from GitHub when online (so updates arrive by themselves), saved copy when offline

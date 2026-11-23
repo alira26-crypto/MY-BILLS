@@ -410,7 +410,8 @@ Assalam o Alaikum${nm?' *'+nm+'*':''},
 
 *Thank you!* We have received your payment for bill *${d.no}*.
 • Amount: *Rs ${fmt(N(d.tot))}*
-• Status: *PAID IN FULL*
+• Status: *PAID IN FULL*${d.pm?`
+• Paid by: ${d.pm}`:''}
 
 *Your paid bill:*
 ${link}
@@ -490,7 +491,7 @@ ${L}
 _Light Up Your Home with Style_`}
 function vcard(d){const nm=(d.cn||'Customer').trim(),p=waPhone(d.cp);return `BEGIN:VCARD\nVERSION:3.0\nFN:${nm} (Aylin Customer)\nN:;${nm} (Aylin Customer);;;\nTEL;TYPE=CELL:+${p}\nNOTE:Aylin Lights customer – bill ${d.no}\nEND:VCARD\n`}
 async function sendLink(){if(!billUsed()){toast('This bill is empty – add a customer or an item first');return}
- saveNow(true);const d=cur(),link=APPURL+'#v='+await packBill(d),msg=thanksMsg(d,link),p=waPhone(d.cp);let did=false;
+ saveNow(true);const d=cur(),link=APPURL+'#v='+await packBill(d),msg=(d.stat==='PAID'?paidMsg:thanksMsg)(d,link),p=waPhone(d.cp);let did=false;
  await pop(`<p style="font-family:PopB;font-size:17px;margin-bottom:6px">💬 Send bill ${_esc(d.no)} on WhatsApp</p>
  ${p?`<p style="font-size:13.5px;color:#555;margin-bottom:10px">WhatsApp opens the chat with <b>${_esc(d.cp)}</b> directly — the number does <b>not</b> need to be saved. The thank-you message and bill link are already typed; just press <b>Send</b>.</p>
  <a class="popbtn wa" id="wago" href="https://wa.me/${p}?text=${encodeURIComponent(msg)}" target="_blank" rel="noopener">💬 Open WhatsApp chat – ${_esc(d.cp)}</a>
@@ -510,10 +511,10 @@ async function billPdf(){const png=await billBlob();const bm=await createImageBi
  const xr=len;let t='xref\n0 6\n0000000000 65535 f \n';for(let n=1;n<=5;n++)t+=String(offs[n]).padStart(10,'0')+' 00000 n \n';add(t+'trailer\n<< /Size 6 /Root 1 0 R >>\nstartxref\n'+xr+'\n%%EOF');
  return new Blob(parts,{type:'application/pdf'})}
 const pdfName=()=>'Aylin_Lights_Bill_'+($('no').value||'')+'.pdf';
-function mailMsg(d,link){return thanksMsg(d,link).replace(/\*/g,'').replace(/^> /gm,'').replace(/^_([^_\n]+)_$/gm,'$1')}
+function mailMsg(d,link){return (d.stat==='PAID'?paidMsg:thanksMsg)(d,link).replace(/\*/g,'').replace(/^> /gm,'').replace(/^_([^_\n]+)_$/gm,'$1')}
 async function sendMail(){if(!billUsed()){toast('This bill is empty – add a customer or an item first');return}
  saveNow(true);const d=cur(),link=APPURL+'#v='+await packBill(d);let EM={};try{EM=JSON.parse(G('aylin_emails')||'{}')||{}}catch(e){}
- const key=waPhone(d.cp)||(d.cn||'').trim().toLowerCase(),pre=d.em||EM[key]||'',sub=`Your Aylin Lights bill ${d.no} – Rs ${fmt(N(d.tot))}`;let did=false;
+ const key=waPhone(d.cp)||(d.cn||'').trim().toLowerCase(),pre=d.em||EM[key]||'',sub=d.stat==='PAID'?`Thank you – your Aylin Lights bill ${d.no} (Rs ${fmt(N(d.tot))}, paid)`:`Your Aylin Lights bill ${d.no} – Rs ${fmt(N(d.tot))}`;let did=false;
  const v=await pop(`<p style="font-family:PopB;font-size:17px;margin-bottom:6px">📧 Send bill ${_esc(d.no)} by email</p>
  <label style="display:block;margin:6px 0 4px">Customer’s email</label><input id="emto" type="email" inputmode="email" autocapitalize="off" value="${_esc(pre)}" placeholder="customer@gmail.com" style="width:100%;padding:10px;border:1.5px solid #d8c7a5;border-radius:8px;font:inherit">
  <p style="font-size:12.5px;color:#777;margin:8px 0">The email has the same thank-you message and the bill link. The customer can open the bill and save it as a picture or PDF.</p>`,
