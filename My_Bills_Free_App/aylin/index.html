@@ -48,7 +48,9 @@ table.it{width:100%;border-collapse:collapse;margin-top:5mm;font-size:9pt}
 .qr div{background:#fff;padding:1mm;border-radius:1.5mm;border:.5mm solid #c9a24a;margin-bottom:1mm}.qr img{width:19mm;display:block}
 .status{display:inline-block;font-family:PopB;font-size:9pt;padding:1mm 3mm;border:.5mm solid;border-radius:1mm;margin-top:2mm}
 @media print{::placeholder{color:transparent}select{appearance:none;-webkit-appearance:none}body{background:#fff;padding:0}.bar,.noprint,.x{display:none!important}.page{margin:0;box-shadow:none}@page{size:A4;margin:0}}
-@media screen and (max-width:830px){.page{zoom:.48}}
+@media screen and (max-width:830px){.page{zoom:var(--pz,.46)}}
+html,body{overflow-x:hidden}
+#led table td,#led table th,#reg table td,#reg table th{white-space:nowrap}#led td.wr{white-space:normal;min-width:190px}
 .headc{height:41mm;background:#0b0a08;border-bottom:1.4mm solid #c9a24a;display:flex;flex-direction:column;align-items:center;text-align:center;color:#f2e6c8}.headc img{height:26.5mm;display:block;margin:0 auto}.headc .tg{font-family:CalI;color:#e3b75c;font-size:11.5pt;line-height:1.2;margin-top:.6mm}.headc .ct{font-size:8.3pt;line-height:1.5;margin-top:.6mm}.headc .ct b{font-family:PopM;color:#e3b75c;font-weight:normal}
 body.cap .page{zoom:1!important}
 .custx{max-width:210mm;margin:8px auto;background:#151515;border:1px solid #a8802c;border-radius:8px;padding:8px 12px;display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center;color:#f3e6c8;font-family:PopM,sans-serif;font-size:13px}
@@ -69,7 +71,8 @@ body.viewmode select{appearance:none;-webkit-appearance:none}
 .vbar a{background:#25d366;color:#fff}
 </style><script>function setSig(id,src){const i=document.getElementById(id);if(!i)return;if(src){i.src=src;i.style.display='block'}else{i.removeAttribute('src');i.style.display='none'}}</script></head><body data-v="bill">
 <div id="topnav" class="noprint"><button data-v="bill" class="on" onclick="view('bill')">🧾 Bill</button><button data-v="reg" onclick="view('reg')">📒 All Bills</button><button data-v="led" onclick="openLed()">📊 Purchases &amp; Profit</button></div>
-<script>if(/^#v=/.test(location.hash)){document.getElementById('topnav').remove()}
+<script>(function(){const f=()=>{document.documentElement.style.setProperty('--pz',Math.min(1,(Math.min(innerWidth,document.documentElement.clientWidth)-30)/793.7).toFixed(4))};f();addEventListener('resize',f)})();
+if(/^#v=/.test(location.hash)){document.getElementById('topnav').remove()}
 function view(v){document.body.dataset.v=v;document.querySelectorAll('#topnav button').forEach(b=>b.classList.toggle('on',b.dataset.v===v));if(v==='reg'){try{renderReg()}catch(e){}}window.scrollTo(0,0)}</script>
 <div class="bar"><span id="cloud" class="cloudchip" style="color:#cbbd9f;align-self:center"></span>
 <button class="p" onclick="printPic()">🖨 Print / Save PDF</button>
@@ -254,7 +257,7 @@ function calc(){let sub=0;[...$('rows').children].forEach((tr,i)=>{tr.querySelec
 const tot=Math.max(0,sub-DV($('dis').value,sub)+N($('del').value));{const s=$('stat').value;if(s==='PAID')$('adv').value=tot?fmt(tot):'0';else if(s==='UNPAID')$('adv').value='0'}const bal=tot-N($('adv').value);$('sub').textContent=fmt(sub);$('tot').textContent=fmt(tot);$('bal').textContent=fmt(bal);$('words').textContent=tot?words(tot)+' Rupees Only':'—';save()}
 function st(){const c={'PAID':'#2e8b57','UNPAID':'#c0392b','PARTIALLY PAID':'#a8802c'}[$('stat').value];$('stat').style.color=c;$('stat').style.borderColor=c;$('adv').readOnly=$('stat').value!=='PARTIALLY PAID';calc()}
 function cur(){return {no:$('no').value,dt:$('dt').value,cn:$('cn').value,cp:$('cp').value,em:($('em').value||'').trim(),rem:REMON,lr:CURLR,ca:$('ca').value,pm:$('pm').value,stat:$('stat').value,dis:$('dis').value,del:$('del').value,adv:$('adv').value,rm:$('rm').value,csig:($('csig').style.display==='block'?$('csig').src:''),tot:N($('tot').textContent),bal:N($('bal').textContent),rows:[...$('rows').children].map(t=>({d:t.querySelector('.d').value,c:t.querySelector('.c').value,q:t.querySelector('.q').value,r:t.querySelector('.rt').value,ds:t.querySelector('.ds').value}))}}
-let BILLS={};try{BILLS=JSON.parse(G('aylin_bills')||'{}')||{}}catch(e){}let LED={};try{LED=JSON.parse(G('aylin_ledger')||'{}')||{}}catch(e){}const isLed=k=>/^(PUR|EXP|SAL)-/.test(k);let ASIG=G('aylin_asig')||'';
+let BILLS={};try{BILLS=JSON.parse(G('aylin_bills')||'{}')||{}}catch(e){}let LED={};try{LED=JSON.parse(G('aylin_ledger')||'{}')||{}}catch(e){}const isLed=k=>/^(PUR|EXP|SAL|SET)-/.test(k);let ASIG=G('aylin_asig')||'';
 function all(){return BILLS}
 function commit(){S('aylin_bills',JSON.stringify(BILLS));S('aylin_asig',ASIG);Cloud.push(toDocs())}
 function toDocs(){const m={};Object.entries(BILLS).forEach(([k,v])=>m['bills/'+k]=v);Object.entries(LED).forEach(([k,v])=>m['led/'+k]=v);if(ASIG)m['meta/asig']={u:ASIG};return m}
@@ -459,14 +462,14 @@ function renderRem(){const el=$('remlist');if(!el)return;const L=Object.values(B
 /* ---------- Purchases & Profit (owner only) ---------- */
 let LEDOK=false,LEDT='book',LEDG='d';
 function lh(str){let h=5381;for(let i=0;i<str.length;i++)h=((h<<5)+h+str.charCodeAt(i))|0;return String(h>>>0)}
-function ledPin(){return G('aylin_ledpin')||lh('aylin|4827')}
+function ledPin(){const r=LED['SET-ledpin'];return (r&&r.h)||G('aylin_ledpin')||lh('aylin|4827')}
 async function openLed(){if(!LEDOK){let pin='';const v=await pop(`<div class="edt">🔒 Owner only</div><p style="font-size:13.5px;color:#555;margin-bottom:8px">Enter the owner PIN to open Purchases &amp; Profit.</p><input id="lpin" type="password" inputmode="numeric" style="width:100%;padding:10px;border:1.5px solid #d8c7a5;border-radius:8px;font:inherit">`,[['Cancel',0],['🔓 Open',1,'p']],{onOpen:m=>setTimeout(()=>m.querySelector('#lpin').focus(),50),onBtn:(v,m)=>{pin=m.querySelector('#lpin').value;return false}});
  if(v!==1)return;if(lh('aylin|'+pin)!==ledPin()){note('Wrong PIN.');return}LEDOK=true}
  $('led').style.display='block';if(!$('lf')){renderLed();ledQ('all')}else renderLed();view('led')}
 function ledSave(d){d.u=Date.now();LED[d.no]=d;S('aylin_ledger',JSON.stringify(LED));Cloud.push(toDocs());GS.mark(d.no);renderLed()}
 async function ledDel(no){if(!await ask('Delete this entry?','Delete'))return;delete LED[no];S('aylin_ledger',JSON.stringify(LED));Cloud.push(toDocs());GS.mark(no);renderLed()}
 const tdy=()=>{const D=new Date();return new Date(D-D.getTimezoneOffset()*6e4).toISOString().slice(0,10)};
-function ledQ(k){const T=tdy(),ad=(d,n)=>{const x=new Date(d+'T12:00:00');x.setDate(x.getDate()+n);return x.toISOString().slice(0,10)};let f=T,t=T;if(k==='month')f=T.slice(0,8)+'01';if(k==='last'){const x=new Date(T.slice(0,8)+'01T12:00:00');x.setMonth(x.getMonth()-1);f=x.toISOString().slice(0,8)+'01';t=ad(T.slice(0,8)+'01',-1)}if(k==='all'){f='2000-01-01';t='2099-12-31'}if(k==='year')f=T.slice(0,5)+'01-01';
+function ledQ(k){const T=tdy(),ad=(d,n)=>{const x=new Date(d+'T12:00:00');x.setDate(x.getDate()+n);return x.toISOString().slice(0,10)};let f=T,t=T;if(k==='month')f=T.slice(0,8)+'01';if(k==='last'){const x=new Date(T.slice(0,8)+'01T12:00:00');x.setMonth(x.getMonth()-1);f=x.toISOString().slice(0,8)+'01';t=ad(T.slice(0,8)+'01',-1)}if(k==='all'){try{f=ledgerBook(Object.values(BILLS),Object.values(LED)).start||T}catch(e){f=T}t=T}if(k==='year')f=T.slice(0,5)+'01-01';
  $('lf').value=f;$('lt').value=t;renderLed()}
 const pkey=(code,name)=>code?'C:'+String(code).replace(/^AL-?/i,'').trim().toUpperCase():'N:'+String(name||'').trim().toLowerCase();
 function ledCalc(f,t){const P={},nameIx={};const L=Object.values(LED);
@@ -531,7 +534,7 @@ function bookData(){return ledgerBook(Object.values(BILLS),Object.values(LED))}
 function bookHtml(f,t,M,th,td,dd){const B=bookData(),inR=d=>d>=f&&d<=t,DY=B.days.filter(d=>inR(d.dt)),G=LEDG==='m'?ledgerMonths(DY):DY,T=ledgerSum(DY),A=ledgerSum(B.days),last=B.days[B.days.length-1]||{runP:0};
  const MN=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'],lab=k=>k.length===7?MN[+k.slice(5)-1]+' '+k.slice(0,4):dd(k),R=v=>fmt(Math.round(v)),neg=v=>v<0?'color:#b03a2e;':'';
  const tile=(k,v,dark)=>`<div style="border:1px solid #e3d6b8;border-radius:8px;padding:9px;background:${dark?'#0b0a08':'#fffdf7'};color:${dark?'#e3b75c':'#1c1a17'}"><div style="font-size:11.5px;opacity:.85">${k}</div><div style="font-family:PopB;font-size:18px;${dark?'':neg(v)}">Rs ${R(v)}</div></div>`;
- const E=B.entries.filter(e=>inR(e.dt)&&M(e)),all=t>='2090'&&f<='2000-01-01';
+ const E=B.entries.filter(e=>inR(e.dt)&&M(e)),all=f<=(B.start||f)&&t>=tdy();
  return`<div style="padding:10px 12px;background:#0b0a08;color:#e3b75c;border-radius:8px;margin-bottom:10px;font-size:13px">📒 Business started on <b>${B.start?dd(B.start):'–'}</b> · <b>${last.runP<0?'Loss':'Net profit'} till today: Rs ${R(last.runP)}</b></div>
  <div style="font-family:PopM;margin:4px 0 6px">Since start</div>
  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin-bottom:12px">${tile('💵 Total sales',A.sale)}${tile('🛒 − Goods purchased',A.buy)}${tile('= Gross profit',A.sale-A.buy)}${tile('🧾 − Expenses',A.exp)}${tile(A.np<0?'🔻 = NET LOSS':'💰 = NET PROFIT',A.np,1)}${A.due?tile('🔴 Customers still owe (in sold)',A.due):''}</div>
@@ -542,7 +545,7 @@ function bookHtml(f,t,M,th,td,dd){const B=bookData(),inR=d=>d>=f&&d<=t,DY=B.days
  ${G.length?`<tr style="background:#0b0a08;color:#e3b75c">${td('Total')}${td(R(T.sale))}${td(R(T.buy))}${td(R(T.exp))}${td(R(T.np))}${td('')}</tr>`:''}</table></div>
  <div style="font-family:PopM;margin:14px 0 6px">📖 Every entry (day book) <span style="font-size:12px;color:#8a7f6c">${E.length} entries</span></div>
  <div style="overflow-x:auto;max-height:520px;overflow-y:auto"><table style="width:100%;border-collapse:collapse;font-size:12.5px">${th(['Date','Type','Details','Sales (+)','Purchases (−)','Expenses (−)','Profit till date'])}
- ${E.map((e,i)=>`<tr style="background:${i%2?'#faf6ec':'#fff'}">${td(dd(e.dt),'white-space:nowrap')}${td(_esc(e.type)+'<div style="font-size:11px;color:#8a7f6c">'+_esc(e.id)+'</div>')}${td(_esc(e.what)+(e.due?' <span style="color:#b03a2e;font-size:11px">(Rs '+R(e.due)+' unpaid)</span>':''))}${td(e.sale?R(e.sale):'')}${td(e.buy?R(e.buy):'','color:#b03a2e')}${td(e.exp?R(e.exp):'','color:#b03a2e')}${td(R(e.prof),'font-family:PopB;'+neg(e.prof))}</tr>`).join('')}</table></div>
+ ${E.map((e,i)=>`<tr style="background:${i%2?'#faf6ec':'#fff'}">${td(dd(e.dt),'white-space:nowrap')}${td(_esc(e.type)+'<div style="font-size:11px;color:#8a7f6c">'+_esc(e.id)+'</div>')}${td(_esc(e.what)+(e.due?' <span style="color:#b03a2e;font-size:11px">(Rs '+R(e.due)+' unpaid)</span>':''),'white-space:normal;min-width:190px')}${td(e.sale?R(e.sale):'')}${td(e.buy?R(e.buy):'','color:#b03a2e')}${td(e.exp?R(e.exp):'','color:#b03a2e')}${td(R(e.prof),'font-family:PopB;'+neg(e.prof))}</tr>`).join('')}</table></div>
  <div style="font-size:12px;color:#6b6252;margin-top:8px;line-height:1.6"><b>How it works:</b> Net profit = Sales − Purchases − Expenses. “Profit till date” keeps adding up from the first day. Sold comes from your bills automatically (bill total) plus “Sales without bill”. Bought comes from 📦 Purchases, expenses from 🧾 Expenses.${A.due?` Rs ${R(A.due)} of the sold amount is still unpaid by customers.`:''}</div>`}
 /* ===== Aylin ledger – styled Excel (.xlsx) ===== */
 const LXL=(()=>{
@@ -646,7 +649,7 @@ function addPur(){const it=$('pit').value.trim(),q=N($('pq').value),cost=N($('pc
 function addLedExp(){const d=$('edd').value.trim(),a=N($('ea').value);if(!d||!a){note('Enter the expense and amount.');return}ledSave({no:'EXP-'+Date.now(),dt:$('ed').value||tdy(),d,a});toast('✔ Expense added')}
 function addSal(){const it=$('sit').value.trim(),q=N($('sq').value),r=N($('sr').value);if(!it||!q){note('Enter the product and pieces.');return}const pu=Object.values(LED).find(x=>x.no.startsWith('PUR-')&&x.it.toLowerCase()===it.toLowerCase());ledSave({no:'SAL-'+Date.now(),dt:$('sd').value||tdy(),it,c:pu?pu.c:'',q,r});toast('✔ Sale added')}
 async function chLedPin(){let a='',b='';const v=await pop(`<div class="edt">🔑 Change owner PIN</div><input id="np1" type="password" inputmode="numeric" placeholder="New PIN" style="width:100%;padding:10px;margin-bottom:8px;border:1.5px solid #d8c7a5;border-radius:8px;font:inherit"><input id="np2" type="password" inputmode="numeric" placeholder="New PIN again" style="width:100%;padding:10px;border:1.5px solid #d8c7a5;border-radius:8px;font:inherit">`,[['Cancel',0],['Save',1,'p']],{onBtn:(v,m)=>{a=m.querySelector('#np1').value;b=m.querySelector('#np2').value;return false}});
- if(v!==1)return;if(a.length<4||a!==b){note('PINs must match and be at least 4 digits.');return}S('aylin_ledpin',lh('aylin|'+a));toast('✔ PIN changed (on this device)')}
+ if(v!==1)return;if(a.length<4||a!==b){note('PINs must match and be at least 4 digits.');return}const h=lh('aylin|'+a);S('aylin_ledpin',h);ledSave({no:'SET-ledpin',h});toast('✔ PIN changed – it will update on your other devices too')}
 async function saveImg(){if(await fileOut(await billBlob(),fname()))afterSent()}
 /* ---------- bill link (customer can open, save picture or PDF) ---------- */
 const APPURL='https://alira26-crypto.github.io/aylinlights-ClientBillsDetail/';
@@ -735,9 +738,17 @@ async function sendMail(){if(!billUsed()){toast('This bill is empty – add a cu
  if(did)afterSent()}
 async function startView(){let d=null;try{d=await unpackBill(location.hash.slice(3))}catch(e){}
  document.body.classList.add('viewmode');
- if(!d){const has=/^#v=./.test(location.hash);document.body.innerHTML=`<div style="font-family:PopM,sans-serif;min-height:100vh;background:#151515;color:#f3e6c8;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:30px;gap:14px"><div style="font-family:Cal,serif;font-size:38px;color:#f3c66d">Aylin Lights</div><div style="letter-spacing:4px;font-size:12px">AND POWER SUPPLY</div><div style="font-size:15px;max-width:420px;margin-top:10px">${has?'This bill link is incomplete. Please ask us to send it again.':'Bills from Aylin Lights open here from the link we send you on WhatsApp.'}</div><div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-top:8px"><a style="background:#25d366;color:#fff;padding:10px 16px;border-radius:8px;text-decoration:none" href="https://wa.me/923124828573">💬 WhatsApp</a><a style="background:#f3c66d;color:#151515;padding:10px 16px;border-radius:8px;text-decoration:none" href="https://instagram.com/aylinlight_">📸 Instagram</a><a style="background:#f3c66d;color:#151515;padding:10px 16px;border-radius:8px;text-decoration:none" href="https://facebook.com/share/1Q8bsMoYxR">👍 Facebook</a></div></div>`;return}
+ const LG=(document.querySelector('#pg .headc img')||{}).src||'';
+ const shell=(icon,t1,t2)=>{document.body.style.cssText='margin:0;padding:0;background:#0b0a08';document.body.innerHTML=`<div style="font-family:PopM,sans-serif;min-height:100vh;background:radial-gradient(circle at 50% 20%,#2a2414,#0b0a08 70%);color:#f3e6c8;display:flex;align-items:center;justify-content:center;padding:22px;box-sizing:border-box">
+ <div style="max-width:440px;width:100%;background:#151515;border:1.5px solid #a8802c;border-radius:18px;padding:26px 20px;text-align:center;box-shadow:0 10px 40px rgba(0,0,0,.5)">
+ ${LG?`<img src="${LG}" alt="Aylin Lights" style="width:78%;max-width:300px;display:block;margin:0 auto 6px">`:`<div style="font-family:Cal,serif;font-size:38px;color:#f3c66d">Aylin Lights</div>`}
+ <div style="font-family:PopB;font-size:13px;letter-spacing:1px;color:#e3b75c">AYLIN LIGHTS AND POWER SUPPLY</div><div style="font-style:italic;font-size:12.5px;color:#cbbd9f;margin-bottom:16px">Light Up Your Home with Style</div>
+ <div style="font-size:40px;line-height:1">${icon}</div><div style="font-family:PopB;font-size:19px;color:#fff;margin:8px 0 6px">${t1}</div><div style="font-size:14px;color:#cbbd9f;line-height:1.55">${t2}</div>
+ <a style="display:block;background:#25d366;color:#fff;padding:12px;border-radius:10px;text-decoration:none;margin-top:18px;font-family:PopB" href="https://wa.me/923124828573">💬 WhatsApp us – +92 312 4828573</a>
+ <div style="display:flex;gap:8px;margin-top:10px"><a style="flex:1;background:#e3b75c;color:#151515;padding:10px;border-radius:10px;text-decoration:none;font-size:13.5px" href="https://instagram.com/aylinlight_">📸 Instagram</a><a style="flex:1;background:#e3b75c;color:#151515;padding:10px;border-radius:10px;text-decoration:none;font-size:13.5px" href="https://facebook.com/share/1Q8bsMoYxR">👍 Facebook</a><a style="flex:1;background:#e3b75c;color:#151515;padding:10px;border-radius:10px;text-decoration:none;font-size:13.5px" href="https://whatsapp.com/channel/0029Vb9ZcS5KGGGIejdqi905">📢 Channel</a></div></div></div>`};
+ if(!d){const has=/^#v=./.test(location.hash);shell(has?'⚠️':'🧾',has?'This bill link is incomplete':'Your bill opens here',has?'Please message us and we will send your bill again.':'Bills from Aylin Lights open here from the link we send you on WhatsApp.');return}
  const LIFE=(N(d.e)||30)*60*1000,left=d.x?LIFE-(Date.now()-d.x):-1;
- if(left<=0){document.body.innerHTML=`<div style="font-family:PopM,sans-serif;min-height:100vh;background:#151515;color:#f3e6c8;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:30px;gap:14px"><div style="font-family:Cal,serif;font-size:38px;color:#f3c66d">Aylin Lights</div><div style="letter-spacing:4px;font-size:12px">AND POWER SUPPLY</div><div style="font-size:17px;max-width:440px;margin-top:10px">This bill link has expired.</div><div style="font-size:14px;max-width:440px;color:#cbbd9f">For your security, bill links work for 30 minutes. Please message us and we will send your bill again.</div><a style="background:#25d366;color:#fff;padding:11px 18px;border-radius:8px;text-decoration:none;margin-top:8px" href="https://wa.me/923124828573">💬 WhatsApp us – +92 312 4828573</a></div>`;return}
+ if(left<=0){shell('⏰','This bill link has expired','For your security, bill links work for a short time only. Please message us on WhatsApp and we will send your bill again.');return}
  load(Object.assign({csig:''},d));[...$('rows').children].forEach(tr=>{if(!tr.querySelector('.d').value&&!N(tr.querySelector('.rt').value))tr.remove()});calc();
  document.querySelectorAll('#pg input,#pg select,#pg textarea').forEach(e=>{e.readOnly=true;if(e.tagName==='SELECT')e.disabled=true;e.tabIndex=-1});
  document.title='Aylin Lights – Bill '+d.no;
