@@ -522,25 +522,116 @@ function bookHtml(f,t,M,th,td,dd){const B=bookData(),inR=d=>d>=f&&d<=t,DY=B.days
  const MN=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'],lab=k=>k.length===7?MN[+k.slice(5)-1]+' '+k.slice(0,4):dd(k),R=v=>fmt(Math.round(v)),neg=v=>v<0?'color:#b03a2e;':'';
  const tile=(k,v,dark)=>`<div style="border:1px solid #e3d6b8;border-radius:8px;padding:9px;background:${dark?'#0b0a08':'#fffdf7'};color:${dark?'#e3b75c':'#1c1a17'}"><div style="font-size:11.5px;opacity:.85">${k}</div><div style="font-family:PopB;font-size:18px;${dark?'':neg(v)}">Rs ${R(v)}</div></div>`;
  const E=B.entries.filter(e=>inR(e.dt)&&M(e)),all=t>='2090'&&f<='2000-01-01';
- return`<div style="padding:10px 12px;background:#0b0a08;color:#e3b75c;border-radius:8px;margin-bottom:10px;font-size:13px">📒 Business started on <b>${B.start?dd(B.start):'–'}</b> · <b>Balance till today: Rs ${R(last.runP)}</b> &nbsp;(sold − bought − expenses)</div>
+ return`<div style="padding:10px 12px;background:#0b0a08;color:#e3b75c;border-radius:8px;margin-bottom:10px;font-size:13px">📒 Business started on <b>${B.start?dd(B.start):'–'}</b> · <b>${last.runP<0?'Loss':'Net profit'} till today: Rs ${R(last.runP)}</b></div>
  <div style="font-family:PopM;margin:4px 0 6px">Since start</div>
- <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin-bottom:12px">${tile('💵 Total sold',A.sale)}${tile('🛒 − Total goods bought',A.buy)}${tile('🧾 − Total expenses',A.exp)}${tile('💰 = BALANCE / PROFIT',A.np,1)}${A.due?tile('🔴 Customers still owe (in sold)',A.due):''}</div>
- ${all?'':`<div style="font-family:PopM;margin:4px 0 6px">Selected dates</div><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px;margin-bottom:10px">${tile('Sold',T.sale)}${tile('− Bought',T.buy)}${tile('− Expenses',T.exp)}${tile('= Profit',T.np,1)}</div>`}
- <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px">${[['d','Day by day'],['m','Month by month']].map(([k,l])=>`<button onclick="LEDG='${k}';renderLed()" style="padding:6px 12px;border-radius:16px;border:1.5px solid #a8802c;cursor:pointer;background:${LEDG===k?'#a8802c':'#fff'};color:${LEDG===k?'#fff':'#7a5a12'}">${l}</button>`).join('')}<button onclick="bookCSV()" style="padding:6px 12px;border-radius:16px;border:0;background:#1e7a46;color:#fff;cursor:pointer;font-family:PopM">⬇ Download Excel (full ledger)</button></div>
- <div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:13px">${th([LEDG==='m'?'Month':'Date','Sold (+)','Bought (−)','Expenses (−)','Profit','Balance till date'])}
+ <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin-bottom:12px">${tile('💵 Total sales',A.sale)}${tile('🛒 − Goods purchased',A.buy)}${tile('= Gross profit',A.sale-A.buy)}${tile('🧾 − Expenses',A.exp)}${tile(A.np<0?'🔻 = NET LOSS':'💰 = NET PROFIT',A.np,1)}${A.due?tile('🔴 Customers still owe (in sold)',A.due):''}</div>
+ ${all?'':`<div style="font-family:PopM;margin:4px 0 6px">Selected dates</div><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px;margin-bottom:10px">${tile('Sales',T.sale)}${tile('− Purchases',T.buy)}${tile('− Expenses',T.exp)}${tile('= Net profit',T.np,1)}</div>`}
+ <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px">${[['d','Day by day'],['m','Month by month']].map(([k,l])=>`<button onclick="LEDG='${k}';renderLed()" style="padding:6px 12px;border-radius:16px;border:1.5px solid #a8802c;cursor:pointer;background:${LEDG===k?'#a8802c':'#fff'};color:${LEDG===k?'#fff':'#7a5a12'}">${l}</button>`).join('')}<button onclick="bookCSV()" style="padding:6px 12px;border-radius:16px;border:0;background:#1e7a46;color:#fff;cursor:pointer;font-family:PopM">⬇ Download Excel Ledger (.xlsx)</button></div>
+ <div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:13px">${th([LEDG==='m'?'Month':'Date','Sales (+)','Purchases (−)','Expenses (−)','Net profit','Profit till date'])}
  ${G.length?G.map((d,i)=>`<tr style="background:${i%2?'#faf6ec':'#fff'}">${td('<b>'+lab(d.dt)+'</b>')}${td(d.sale?R(d.sale):'–')}${td(d.buy?R(d.buy):'–','color:#b03a2e')}${td(d.exp?R(d.exp):'–','color:#b03a2e')}${td(R(d.np),'font-family:PopB;'+(d.np<0?'color:#b03a2e':'color:#1e7a46'))}${td(R(d.runP),'font-family:PopB;'+neg(d.runP))}</tr>`).join(''):`<tr>${td('No records in these dates.','color:#8a7f6c')}</tr>`}
  ${G.length?`<tr style="background:#0b0a08;color:#e3b75c">${td('Total')}${td(R(T.sale))}${td(R(T.buy))}${td(R(T.exp))}${td(R(T.np))}${td('')}</tr>`:''}</table></div>
  <div style="font-family:PopM;margin:14px 0 6px">📖 Every entry (day book) <span style="font-size:12px;color:#8a7f6c">${E.length} entries</span></div>
- <div style="overflow-x:auto;max-height:520px;overflow-y:auto"><table style="width:100%;border-collapse:collapse;font-size:12.5px">${th(['Date','Entry','Details','Sold (+)','Bought (−)','Expense (−)','Balance'])}
+ <div style="overflow-x:auto;max-height:520px;overflow-y:auto"><table style="width:100%;border-collapse:collapse;font-size:12.5px">${th(['Date','Type','Details','Sales (+)','Purchases (−)','Expenses (−)','Profit till date'])}
  ${E.map((e,i)=>`<tr style="background:${i%2?'#faf6ec':'#fff'}">${td(dd(e.dt),'white-space:nowrap')}${td(_esc(e.type)+'<div style="font-size:11px;color:#8a7f6c">'+_esc(e.id)+'</div>')}${td(_esc(e.what)+(e.due?' <span style="color:#b03a2e;font-size:11px">(Rs '+R(e.due)+' unpaid)</span>':''))}${td(e.sale?R(e.sale):'')}${td(e.buy?R(e.buy):'','color:#b03a2e')}${td(e.exp?R(e.exp):'','color:#b03a2e')}${td(R(e.prof),'font-family:PopB;'+neg(e.prof))}</tr>`).join('')}</table></div>
- <div style="font-size:12px;color:#6b6252;margin-top:8px;line-height:1.6"><b>How it works:</b> Balance = everything sold − all goods bought − all expenses, adding up from the first day. Sold comes from your bills automatically (bill total) plus “Sales without bill”. Bought comes from 📦 Purchases, expenses from 🧾 Expenses.${A.due?` Rs ${R(A.due)} of the sold amount is still unpaid by customers.`:''}</div>`}
-function bookCSV(){const B=bookData(),A=ledgerSum(B.days),R=v=>Math.round(v);
- const L=[['AYLIN LIGHTS AND POWER SUPPLY – Business Ledger'],['Business started on',B.start],['Downloaded on',tdy()],[],['SUMMARY SINCE START'],['Total sold (+)',R(A.sale)],['Total goods bought (−)',R(A.buy)],['Total expenses (−)',R(A.exp)],['BALANCE / PROFIT (sold − bought − expenses)',R(A.np)],['Customers still owe (inside sold)',R(A.due)],[],
- ['MONTH BY MONTH'],['Month','Sold (+)','Bought (−)','Expenses (−)','Profit','Balance till date']];
- ledgerMonths(B.days).forEach(m=>L.push([m.dt,R(m.sale),R(m.buy),R(m.exp),R(m.np),R(m.runP)]));
- L.push([],['DAY BY DAY'],['Date','Sold (+)','Bought (−)','Expenses (−)','Profit','Balance till date']);B.days.forEach(d=>L.push([d.dt,R(d.sale),R(d.buy),R(d.exp),R(d.np),R(d.runP)]));
- L.push([],['EVERY ENTRY (DAY BOOK)'],['Date','Entry','No.','Details','Sold (+)','Bought (−)','Expense (−)','Unpaid','Balance']);B.entries.forEach(e=>L.push([e.dt,e.type,e.id,e.what,R(e.sale)||'',R(e.buy)||'',R(e.exp)||'',R(e.due)||'',R(e.prof)]));
- const q=v=>{v=String(v??'');return /[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v};fileOut(new Blob(['﻿'+L.map(r=>r.map(q).join(',')).join('\r\n')],{type:'text/csv'}),'Aylin_Lights_Ledger_'+tdy()+'.csv')}
+ <div style="font-size:12px;color:#6b6252;margin-top:8px;line-height:1.6"><b>How it works:</b> Net profit = Sales − Purchases − Expenses. “Profit till date” keeps adding up from the first day. Sold comes from your bills automatically (bill total) plus “Sales without bill”. Bought comes from 📦 Purchases, expenses from 🧾 Expenses.${A.due?` Rs ${R(A.due)} of the sold amount is still unpaid by customers.`:''}</div>`}
+/* ===== Aylin ledger – styled Excel (.xlsx) ===== */
+const LXL=(()=>{
+ const x=s=>String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f]/g,'');
+ const col=n=>{let s='';n++;while(n){const m=(n-1)%26;s=String.fromCharCode(65+m)+s;n=Math.floor((n-1)/26)}return s};
+ // fonts
+ const F=['<font><sz val="11"/><name val="Calibri"/></font>',                                  //0 normal
+  '<font><b/><sz val="18"/><color rgb="FFE3B75C"/><name val="Calibri"/></font>',              //1 title gold
+  '<font><i/><sz val="11"/><color rgb="FFF3E6C8"/><name val="Calibri"/></font>',              //2 subtitle
+  '<font><b/><sz val="11"/><color rgb="FFE3B75C"/><name val="Calibri"/></font>',              //3 header gold
+  '<font><b/><sz val="11"/><color rgb="FF1E7A46"/><name val="Calibri"/></font>',              //4 green bold
+  '<font><b/><sz val="11"/><color rgb="FFE65100"/><name val="Calibri"/></font>',              //5 orange bold
+  '<font><b/><sz val="11"/><color rgb="FFC62828"/><name val="Calibri"/></font>',              //6 red bold
+  '<font><b/><sz val="11"/><name val="Calibri"/></font>',                                     //7 bold
+  '<font><b/><sz val="15"/><color rgb="FFFFFFFF"/><name val="Calibri"/></font>',              //8 big white
+  '<font><b/><sz val="13"/><color rgb="FF7A5A12"/><name val="Calibri"/></font>',              //9 section
+  '<font><sz val="11"/><color rgb="FF1E7A46"/><name val="Calibri"/></font>',                  //10 green
+  '<font><sz val="11"/><color rgb="FFE65100"/><name val="Calibri"/></font>',                  //11 orange
+  '<font><sz val="11"/><color rgb="FFC62828"/><name val="Calibri"/></font>',                  //12 red
+  '<font><i/><sz val="10"/><color rgb="FF6B6252"/><name val="Calibri"/></font>'];             //13 note
+ const fill=c=>`<fill><patternFill patternType="solid"><fgColor rgb="FF${c}"/><bgColor indexed="64"/></patternFill></fill>`;
+ const FI=['<fill><patternFill patternType="none"/></fill>','<fill><patternFill patternType="gray125"/></fill>',
+  fill('0B0A08'),fill('E8F5E9'),fill('FFF3E0'),fill('FDECEA'),fill('FFF8E1'),fill('F3E3B5'),fill('1E7A46'),fill('FFFFFF'),fill('FAF6EC'),fill('B03A2E')];
+ //        2 black   3 green   4 orange  5 red     6 cream   7 gold    8 dkgreen 9 white  10 band  11 dkred
+ const BD=['<border><left/><right/><top/><bottom/><diagonal/></border>','<border><left style="thin"><color rgb="FFD8C7A5"/></left><right style="thin"><color rgb="FFD8C7A5"/></right><top style="thin"><color rgb="FFD8C7A5"/></top><bottom style="thin"><color rgb="FFD8C7A5"/></bottom><diagonal/></border>'];
+ const ST={},XF=['<xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/>'];
+ const def=(name,font,fl,num,al,bd)=>{ST[name]=XF.length;XF.push(`<xf numFmtId="${num||0}" fontId="${font}" fillId="${fl}" borderId="${bd==null?1:bd}" xfId="0" applyFont="1" applyFill="1" applyBorder="1"${num?' applyNumberFormat="1"':''}${al?' applyAlignment="1"><alignment '+al+'/></xf>':'/>'}`)};
+ const M=164,C='horizontal="center" vertical="center"',L='horizontal="left" vertical="center" wrapText="1"';
+ def('title',1,2,0,'horizontal="left" vertical="center"',0);def('sub',2,2,0,'horizontal="left" vertical="center"',0);def('blk',0,2,0,'',0);
+ def('head',3,2,0,C+' wrapText="1"');def('sec',9,0,0,'',0);def('note',13,0,0,'horizontal="left" vertical="top" wrapText="1"',0);
+ def('txt',0,9,0,L);def('txtB',0,10,0,L);def('date',0,9,0,C);def('dateB',0,10,0,C);
+ def('num',0,9,M);def('numB',0,10,M);
+ def('sale',10,3,M);def('buy',11,4,M);def('exp',12,5,M);def('due',12,9,M);
+ def('tSale',4,3,0,C);def('tBuy',5,4,0,C);def('tExp',6,5,0,C);
+ def('prof',4,9,M);def('profB',4,10,M);def('loss',6,9,M);def('lossB',6,10,M);
+ def('totL',7,7,0,L);def('tot',7,7,M);
+ def('lab',7,6,0,L);def('labS',4,3,0,L);def('labP',5,4,0,L);def('labE',6,5,0,L);
+ def('vS',4,3,M);def('vP',5,4,M);def('vE',6,5,M);def('v',7,6,M);
+ def('bigL',8,8,0,L);def('big',8,8,M);def('bigLossL',8,11,0,L);def('bigLoss',8,11,M);
+ const styles=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><numFmts count="1"><numFmt numFmtId="${M}" formatCode="#,##0;[Red]\\-#,##0;&quot;–&quot;"/></numFmts><fonts count="${F.length}">${F.join('')}</fonts><fills count="${FI.length}">${FI.join('')}</fills><borders count="${BD.length}">${BD.join('')}</borders><cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs><cellXfs count="${XF.length}">${XF.join('')}</cellXfs><cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>`;
+ /* sheet: {name, widths:[], rows:[[cell...]], merges:['A1:F1'], freeze:row, filter:'A5:I40', heights:{1:30}}
+    cell: value | {v, s, f} */
+ function sheetXml(sh){let s='<?xml version="1.0" encoding="UTF-8" standalone="yes"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">';
+  s+='<sheetPr><pageSetUpPr fitToPage="1"/></sheetPr><sheetViews><sheetView workbookViewId="0" showGridLines="0"'+(sh.tab?' tabSelected="1"':'')+'>'+(sh.freeze?`<pane ySplit="${sh.freeze}" topLeftCell="A${sh.freeze+1}" activePane="bottomLeft" state="frozen"/>`:'')+'</sheetView></sheetViews>';
+  s+='<sheetFormatPr defaultRowHeight="18"/><cols>'+sh.widths.map((w,i)=>`<col min="${i+1}" max="${i+1}" width="${w}" customWidth="1"/>`).join('')+'</cols><sheetData>';
+  sh.rows.forEach((r,ri)=>{const h=(sh.heights||{})[ri+1];s+=`<row r="${ri+1}"${h?` ht="${h}" customHeight="1"`:''}>`;(r||[]).forEach((c,ci)=>{if(c==null)return;const o=typeof c==='object'?c:{v:c};const ref=col(ci)+(ri+1),st=o.s!=null?` s="${ST[o.s]}"`:'';
+    if(o.f)s+=`<c r="${ref}"${st}><f>${x(o.f)}</f>${typeof o.v==='number'?`<v>${o.v}</v>`:''}</c>`;
+    else if(typeof o.v==='number'&&isFinite(o.v))s+=`<c r="${ref}"${st}><v>${o.v}</v></c>`;
+    else if(o.v!==''&&o.v!=null)s+=`<c r="${ref}" t="inlineStr"${st}><is><t xml:space="preserve">${x(o.v)}</t></is></c>`;
+    else s+=`<c r="${ref}"${st}/>`});s+='</row>'});
+  s+='</sheetData>';if(sh.filter)s+=`<autoFilter ref="${sh.filter}"/>`;if(sh.merges&&sh.merges.length)s+=`<mergeCells count="${sh.merges.length}">${sh.merges.map(m=>`<mergeCell ref="${m}"/>`).join('')}</mergeCells>`;
+  s+='<pageMargins left="0.4" right="0.4" top="0.5" bottom="0.5" header="0.3" footer="0.3"/><pageSetup paperSize="9" orientation="landscape" fitToWidth="1" fitToHeight="0"/></worksheet>';return s}
+ async function build(sheets){const z=new JSZip();
+  z.file('[Content_Types].xml','<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>'+sheets.map((s,i)=>`<Override PartName="/xl/worksheets/sheet${i+1}.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>`).join('')+'</Types>');
+  z.file('_rels/.rels','<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>');
+  z.file('xl/workbook.xml','<?xml version="1.0" encoding="UTF-8" standalone="yes"?><workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><bookViews><workbookView activeTab="0"/></bookViews><sheets>'+sheets.map((s,i)=>`<sheet name="${x(s.name)}" sheetId="${i+1}" r:id="rId${i+1}"/>`).join('')+'</sheets><definedNames>'+sheets.map((s,i)=>s.filter?`<definedName name="_xlnm._FilterDatabase" localSheetId="${i}" hidden="1">'${x(s.name)}'!$${s.filter.replace(/([A-Z]+)(\d+):([A-Z]+)(\d+)/,'$1$$$2:$$$3$$$4')}</definedName>`:'').join('')+'</definedNames></workbook>');
+  z.file('xl/_rels/workbook.xml.rels','<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'+sheets.map((s,i)=>`<Relationship Id="rId${i+1}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet${i+1}.xml"/>`).join('')+`<Relationship Id="rId${sheets.length+1}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>`);
+  z.file('xl/styles.xml',styles);sheets.forEach((s,i)=>z.file(`xl/worksheets/sheet${i+1}.xml`,sheetXml(s)));
+  return z.generateAsync({type:'blob',mimeType:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'})}
+ return{build,col}})();
+
+async function ledgerXlsx(B,today){return LXL.build(ledgerPages(B,today))}
+function lgCol_(n){let s='';n++;while(n){const m=(n-1)%26;s=String.fromCharCode(65+m)+s;n=Math.floor((n-1)/26)}return s}
+/* Build the 3-page ledger workbook from ledgerBook() data */
+function ledgerPages(B,today){
+ const A=ledgerSum(B.days),MO=ledgerMonths(B.days),R=v=>Math.round(v||0),MN=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+ const dt=d=>{const [y,m,dd]=String(d).split('-');return dd?`${dd} ${MN[+m-1]} ${y}`:MN[+m-1]+' '+y};
+ const gp=A.sale-A.buy,np=A.np,P=v=>({v:R(v),s:v<0?'loss':'prof'}),PB=(v,b)=>({v:R(v),s:v<0?(b?'lossB':'loss'):(b?'profB':'prof')});
+ const head=(t,w)=>[[{v:'AYLIN LIGHTS AND POWER SUPPLY',s:'title'},...Array(w-1).fill({v:'',s:'blk'})],[{v:t+'   ·   Business started '+(B.start?dt(B.start):'–')+'   ·   Report date '+dt(today),s:'sub'},...Array(w-1).fill({v:'',s:'blk'})],[]];
+ const mg=(w,rows)=>rows.map(r=>`A${r}:${lgCol_(w-1)}${r}`);
+ /* ---- Page 1: Profit & Loss ---- */
+ const S=head('Profit & Loss Statement',4);
+ S.push([{v:'PROFIT & LOSS – SINCE START',s:'sec'}]);
+ S.push([{v:'Total Sales (goods sold)',s:'labS'},{v:'＋',s:'tSale'},{v:R(A.sale),s:'vS'},{v:'Money from all bills + sales without bill',s:'txt'}]);
+ S.push([{v:'Less: Goods Purchased',s:'labP'},{v:'−',s:'tBuy'},{v:R(A.buy),s:'vP'},{v:'Stock you bought to sell',s:'txt'}]);
+ S.push([{v:'Gross Profit',s:'lab'},{v:'＝',s:'lab'},{v:R(gp),s:'v'},{v:'Sales − Purchases',s:'txt'}]);
+ S.push([{v:'Less: Expenses',s:'labE'},{v:'−',s:'tExp'},{v:R(A.exp),s:'vE'},{v:'Rent, petrol, bills, salaries, etc.',s:'txt'}]);
+ S.push([{v:np<0?'NET LOSS':'NET PROFIT',s:np<0?'bigLossL':'bigL'},{v:'',s:np<0?'bigLossL':'bigL'},{v:R(np),s:np<0?'bigLoss':'big'},{v:'What is left for you',s:np<0?'bigLossL':'bigL'}]);
+ S.push([{v:'Customers still owe (included in sales)',s:'txt'},{v:'',s:'txt'},{v:R(A.due),s:'exp'},{v:'Unpaid bills',s:'txt'}]);
+ S.push([],[{v:'MONTH BY MONTH',s:'sec'}]);
+ const mh=S.length+1;S.push(['Month','Sales (+)','Purchases (−)','Gross Profit','Expenses (−)','Net Profit','Profit till date'].map(v=>({v,s:'head'})));
+ MO.forEach((m,i)=>{const b=i%2;S.push([{v:dt(m.dt),s:b?'txtB':'txt'},{v:R(m.sale),s:'sale'},{v:R(m.buy),s:'buy'},PB(m.sale-m.buy,b),{v:R(m.exp),s:'exp'},PB(m.np,b),PB(m.runP,b)])});
+ const me=S.length;if(MO.length){const sm=c=>({f:`SUM(${c}${mh+1}:${c}${me})`,s:'tot'});S.push([{v:'TOTAL',s:'totL'},sm('B'),sm('C'),sm('D'),sm('E'),sm('F'),{v:'',s:'tot'}])}
+ S.push([],[{v:'How to read: Net Profit = Sales − Purchases − Expenses. “Profit till date” keeps adding up from the first day of business. Red numbers mean loss.',s:'note'}]);
+ const p1={name:'Profit & Loss',tab:1,widths:[40,10,18,40,16,16,18],rows:S,merges:[...mg(7,[1,2]),`A${S.length}:G${S.length}`],heights:{1:32,2:20,[S.length]:32}};
+ /* ---- Page 2: Daily ---- */
+ const D=head('Daily Ledger',7),dh=D.length+1;D.push(['Date','Sales (+)','Purchases (−)','Gross Profit','Expenses (−)','Net Profit (day)','Profit till date'].map(v=>({v,s:'head'})));
+ B.days.forEach((d,i)=>{const b=i%2;D.push([{v:dt(d.dt),s:b?'dateB':'date'},{v:R(d.sale),s:'sale'},{v:R(d.buy),s:'buy'},PB(d.sale-d.buy,b),{v:R(d.exp),s:'exp'},PB(d.np,b),PB(d.runP,b)])});
+ const de=D.length;if(B.days.length){const sm=c=>({f:`SUM(${c}${dh+1}:${c}${de})`,s:'tot'});D.push([{v:'TOTAL',s:'totL'},sm('B'),sm('C'),sm('D'),sm('E'),sm('F'),{v:'',s:'tot'}])}
+ const p2={name:'Daily',widths:[16,16,16,16,16,18,18],rows:D,merges:mg(7,[1,2]),freeze:dh,filter:`A${dh}:G${Math.max(dh,de)}`,heights:{1:32,[dh]:30}};
+ /* ---- Page 3: Day Book (every entry) ---- */
+ const K=head('Day Book – every entry',9),kh=K.length+1;K.push(['Date','Type','Ref No.','Details','Sales (+)','Purchases (−)','Expenses (−)','Unpaid','Profit till date'].map(v=>({v,s:'head'})));
+ B.entries.forEach((e,i)=>{const b=i%2,T=/^Sale/.test(e.type)?'tSale':e.type==='Purchase'?'tBuy':'tExp';
+  K.push([{v:dt(e.dt),s:b?'dateB':'date'},{v:e.type,s:T},{v:e.id,s:b?'txtB':'txt'},{v:e.what,s:b?'txtB':'txt'},e.sale?{v:R(e.sale),s:'sale'}:{v:'',s:b?'txtB':'txt'},e.buy?{v:R(e.buy),s:'buy'}:{v:'',s:b?'txtB':'txt'},e.exp?{v:R(e.exp),s:'exp'}:{v:'',s:b?'txtB':'txt'},e.due?{v:R(e.due),s:'due'}:{v:'',s:b?'txtB':'txt'},PB(e.prof,b)])});
+ const ke=K.length;if(B.entries.length){const sm=c=>({f:`SUM(${c}${kh+1}:${c}${ke})`,s:'tot'});K.push([{v:'TOTAL',s:'totL'},{v:'',s:'tot'},{v:'',s:'tot'},{v:'',s:'tot'},sm('E'),sm('F'),sm('G'),sm('H'),{v:'',s:'tot'}])}
+ const p3={name:'Day Book',widths:[14,15,20,52,14,15,14,12,17],rows:K,merges:mg(9,[1,2]),freeze:kh,filter:`A${kh}:I${Math.max(kh,ke)}`,heights:{1:32,[kh]:30}};
+ return [p1,p2,p3]}
+
+async function bookCSV(){try{toast('Making Excel ledger…')}catch(e){}const b=await ledgerXlsx(bookData(),tdy());fileOut(b,'Aylin_Lights_Ledger_'+tdy()+'.xlsx')}
 function addPur(){const it=$('pit').value.trim(),q=N($('pq').value),cost=N($('pco').value);if(!it||!q){note('Enter the product and the number of pieces.');return}ledSave({no:'PUR-'+Date.now(),dt:$('pd').value||tdy(),it,c:$('pc').value.trim(),v:$('pv').value.trim(),q,cost,sp:N($('psp').value)});toast('✔ Purchase added')}
 function addLedExp(){const d=$('edd').value.trim(),a=N($('ea').value);if(!d||!a){note('Enter the expense and amount.');return}ledSave({no:'EXP-'+Date.now(),dt:$('ed').value||tdy(),d,a});toast('✔ Expense added')}
 function addSal(){const it=$('sit').value.trim(),q=N($('sq').value),r=N($('sr').value);if(!it||!q){note('Enter the product and pieces.');return}const pu=Object.values(LED).find(x=>x.no.startsWith('PUR-')&&x.it.toLowerCase()===it.toLowerCase());ledSave({no:'SAL-'+Date.now(),dt:$('sd').value||tdy(),it,c:pu?pu.c:'',q,r});toast('✔ Sale added')}
